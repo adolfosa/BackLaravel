@@ -3,9 +3,14 @@
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/users', [UserController::class, 'index']);       // Obtener lista de usuarios
-Route::get('/users/{id}', [UserController::class, 'show']);   // Obtener un usuario específico
-Route::post('/users', [UserController::class, 'store']);      // Crear usuario
-Route::put('/users/{id}', [UserController::class, 'update']); // Actualizar usuario
-Route::delete('/users/{id}', [UserController::class, 'destroy']); // Eliminar usuario
+// Rutas públicas
+Route::post('/login', [UserController::class, 'login']);
+Route::post('/register', [UserController::class, 'store']);
 
+// Rutas protegidas
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [UserController::class, 'logout']);
+    Route::get('/user/{id}', [UserController::class, 'show']);
+    Route::put('/user/{id}', [UserController::class, 'update']);
+    Route::delete('/user/{id}', [UserController::class, 'destroy']);
+});

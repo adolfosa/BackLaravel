@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\User;
@@ -9,10 +8,42 @@ use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
 {
-    // GET
+    // Obtener todos los usuarios (solo para pruebas, deberías restringirlo en producción)
     public function index()
     {
         return response()->json(User::all(), 200);
+    }
+
+    // Login con Sanctum
+    public function login(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required'
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            return response()->json(['message' => 'Credenciales incorrectas'], 401);
+        }
+
+        // Eliminar tokens anteriores y generar un nuevo token
+        $user->tokens()->delete(); 
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'message' => 'Login exitoso',
+            'user' => $user,
+            'token' => $token
+        ]);
+    }
+
+    // Cerrar sesión y eliminar el token
+    public function logout(Request $request)
+    {
+        $request->user()->tokens()->delete();
+        return response()->json(['message' => 'Sesión cerrada correctamente'], 200);
     }
 
     // Obtener un usuario por ID
@@ -25,7 +56,7 @@ class UserController extends Controller
         return response()->json($user, 200);
     }
 
-    // POST
+    // Crear usuario (Registro)
     public function store(Request $request)
     {
         try {
@@ -33,14 +64,6 @@ class UserController extends Controller
                 'name' => 'required|string|max:255',
                 'email' => 'required|string|email|unique:users,email',
                 'password' => 'required|string|min:8',
-            ], [
-                // Personalizando los mensajes de error de validación
-                'email.unique' => 'El correo electrónico ya está registrado en otro usuario.',
-                'email.email' => 'El formato del correo electrónico no es válido.',
-                'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
-                'name.required' => 'El nombre es obligatorio.',
-                'email.required' => 'El correo electrónico es obligatorio.',
-                'password.required' => 'La contraseña es obligatoria.',
             ]);
 
             $user = User::create([
@@ -54,19 +77,13 @@ class UserController extends Controller
                 'user' => $user
             ], 201);
         } catch (ValidationException $e) {
-            return response()->json([
-                'message' => 'Error de validación',
-                'errors' => $e->errors()
-            ], 422);
+            return response()->json(['message' => 'Error de validación', 'errors' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Error interno del servidor',
-                'error' => $e->getMessage()
-            ], 500);
+            return response()->json(['message' => 'Error interno del servidor', 'error' => $e->getMessage()], 500);
         }
     }
 
-    // PUT
+    // Actualizar usuario
     public function update(Request $request, $id)
     {
         try {
@@ -79,11 +96,6 @@ class UserController extends Controller
                 'name' => 'string|max:255',
                 'email' => 'string|email|unique:users,email,' . $id,
                 'password' => 'string|min:8|nullable',
-            ], [
-                // Personalizando los mensajes de error de validación
-                'email.unique' => 'El correo electrónico ya está registrado en otro usuario.',
-                'email.email' => 'El formato del correo electrónico no es válido.',
-                'password.min' => 'La contraseña debe tener al menos 6 caracteres.',
             ]);
 
             $user->name = $request->name ?? $user->name;
@@ -93,25 +105,15 @@ class UserController extends Controller
             }
             $user->save();
 
-            return response()->json([
-                'message' => 'Usuario actualizado con éxito',
-                'user' => $user
-            ], 200);
+            return response()->json(['message' => 'Usuario actualizado con éxito', 'user' => $user], 200);
         } catch (ValidationException $e) {
-            return response()->json([
-                'message' => 'Error de validación',
-                'errors' => $e->errors()
-            ], 422);
+            return response()->json(['message' => 'Error de validación', 'errors' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Error interno del servidor',
-                'error' => $e->getMessage()
-            ], 500);
+            return response()->json(['message' => 'Error interno del servidor', 'error' => $e->getMessage()], 500);
         }
     }
 
-
-    // DELETE
+    // Eliminar usuario
     public function destroy($id)
     {
         try {
@@ -122,10 +124,7 @@ class UserController extends Controller
             $user->delete();
             return response()->json(['message' => 'Usuario eliminado'], 200);
         } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Error interno del servidor',
-                'error' => $e->getMessage()
-            ], 500);
+            return response()->json(['message' => 'Error interno del servidor', 'error' => $e->getMessage()], 500);
         }
     }
 }
