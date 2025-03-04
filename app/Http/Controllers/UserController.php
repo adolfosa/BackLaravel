@@ -9,7 +9,7 @@ use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
 {
-    // Obtener todos los usuarios
+    // GET
     public function index()
     {
         return response()->json(User::all(), 200);
@@ -25,14 +25,22 @@ class UserController extends Controller
         return response()->json($user, 200);
     }
 
-    // Crear un nuevo usuario con manejo de excepciones
+    // POST
     public function store(Request $request)
     {
         try {
             $request->validate([
                 'name' => 'required|string|max:255',
                 'email' => 'required|string|email|unique:users,email',
-                'password' => 'required|string|min:6',
+                'password' => 'required|string|min:8',
+            ], [
+                // Personalizando los mensajes de error de validación
+                'email.unique' => 'El correo electrónico ya está registrado en otro usuario.',
+                'email.email' => 'El formato del correo electrónico no es válido.',
+                'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
+                'name.required' => 'El nombre es obligatorio.',
+                'email.required' => 'El correo electrónico es obligatorio.',
+                'password.required' => 'La contraseña es obligatoria.',
             ]);
 
             $user = User::create([
@@ -58,7 +66,7 @@ class UserController extends Controller
         }
     }
 
-    // Actualizar un usuario con manejo de excepciones
+    // PUT
     public function update(Request $request, $id)
     {
         try {
@@ -70,7 +78,12 @@ class UserController extends Controller
             $request->validate([
                 'name' => 'string|max:255',
                 'email' => 'string|email|unique:users,email,' . $id,
-                'password' => 'string|min:6|nullable',
+                'password' => 'string|min:8|nullable',
+            ], [
+                // Personalizando los mensajes de error de validación
+                'email.unique' => 'El correo electrónico ya está registrado en otro usuario.',
+                'email.email' => 'El formato del correo electrónico no es válido.',
+                'password.min' => 'La contraseña debe tener al menos 6 caracteres.',
             ]);
 
             $user->name = $request->name ?? $user->name;
@@ -97,7 +110,8 @@ class UserController extends Controller
         }
     }
 
-    // Eliminar un usuario con manejo de excepciones
+
+    // DELETE
     public function destroy($id)
     {
         try {

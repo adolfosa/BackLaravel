@@ -1,19 +1,31 @@
-/.phpunit.cache
-/node_modules
+# Node modules
+/node_modules/
+
+# Laravel specific
 /public/build
 /public/hot
 /public/storage
 /storage/*.key
 /storage/pail
-.phpactor.json
+
+# PHPUnit cache
+/.phpunit.cache
 .phpunit.result.cache
+
+# Homestead
 Homestead.json
 Homestead.yaml
+
+# Logs
 npm-debug.log
 yarn-error.log
-/auth.json
-/.fleet
+
+# IDE/editor configurations
 /.idea
 /.nova
 /.vscode
 /.zed
+.phpactor.json
+
+# Sensitive data
+/auth.json
