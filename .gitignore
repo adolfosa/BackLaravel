@@ -1,8 +1,5 @@
-# Node modules
-/node_modules/
 
 # Laravel specific
-/public/build
 /public/hot
 /public/storage
 /storage/*.key
